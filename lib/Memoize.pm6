@@ -49,12 +49,12 @@ Options include:
 
     NORMALIZER => &function
     INSTALL => my &new_name
-     
+
     :SCALAR_CACHE<MEMORY>
     :SCALAR_CACHE('HASH', %cache_hash)
     :SCALAR_CACHE<FAULT>
     :SCALAR_CACHE<MERGE>
-     
+
     :LIST_CACHE<MEMORY>
     :LIST_CACHE('HASH', %cache_hash)
     :LIST_CACHE<FAULT>
@@ -179,14 +179,14 @@ of them.
 
 If you supply variable with a C<&> sigil with C<INSTALL>, memoize will
 install the new, memoized version of the function in that variable..
-For example, 
+For example,
 
     my &fastfib;
 	memoize('fib', INSTALL => &fastfib)
 
 installs the memoized version of C<fib> as C<fastfib>; without the
 C<INSTALL> option it would have replaced the old C<fib> with the
-memoized version.  
+memoized version.
 
 To prevent C<memoize> from installing the memoized version anywhere, use
 C<INSTALL =E<gt> False> or C<:!INSTALL>.
@@ -476,7 +476,7 @@ method, this will cause a run-time error.
 An alternative approach to cache flushing is to use the C<HASH> option
 (see above) to request that C<Memoize> use a particular hash variable
 as its cache.  Then you can examine or modify the hash at any time in
-any way you desire.  You may flush the cache by using C<%hash = ()>. 
+any way you desire.  You may flush the cache by using C<%hash = ()>.
 
 =head1 CAVEATS
 
@@ -551,15 +551,15 @@ and shorter every time you call C<main>.
 
 Similarly, this:
 
-	$u1 = getusers();    
-	$u2 = getusers();    
+	$u1 = getusers();
+	$u2 = getusers();
 	pop @$u1;
 
 will modify $u2 as well as $u1, because both variables are references
 to the same array.  Had C<getusers> not been memoized, $u1 and $u2
 would have referred to different arrays.
 
-=item * 
+=item *
 
 Do not memoize a very simple function.
 
