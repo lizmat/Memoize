@@ -2,11 +2,37 @@ use v6.c;
 
 module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
 
-    our proto sub memoize(|) is export(:DEFAULT:ALL) {*}
-    multi sub memoize(
-      &code, :$NORMALIZER, :$INSTALL, :$SCALAR_CACHE, :$LIST_CACHE
-    ) {
+    role Memoized {
+        has %cache;
+        has $lock = Lock.new;
+        has &.normalizer;
+    }
 
+    my sub wrap-it(&code) {
+
+    }
+
+    my sub simple-scalar-hash-cache(|) {
+        
+    }
+
+
+    my multi sub simple-hash-cache(:$scalar!, |c) {
+    }
+    my multi sub simple-hash-cache(|) {
+    }
+
+    our proto sub memoize(|) is export(:DEFAULT:ALL) {*}
+    multi sub memoize(Str() $name) {
+        my &code = CALLER::{ '&' ~ $name };
+        my $unwrapper := &code.wrap(
+        )
+        memoize( CALLER::{ '&' ~ $name }, :wrap, |c)
+    }
+    multi sub memoize(&code,:$INSTALL! is rw, :$NORMALIZER, :$CACHE,:$wrap) {
+
+    }
+    multi sub memoize(&code, :$NORMALIZER, :$CACHE, :$wrap) {
     }
 
     our sub unmemoize(&code) is export(:ALL) { }
@@ -50,15 +76,27 @@ Options include:
     NORMALIZER => &function
     INSTALL => my &new_name
 
-    :SCALAR_CACHE<MEMORY>
-    :SCALAR_CACHE('HASH', %cache_hash)
-    :SCALAR_CACHE<FAULT>
-    :SCALAR_CACHE<MERGE>
+    :CACHE<MEMORY>
+    :CACHE('HASH', %cache_hash)
 
-    :LIST_CACHE<MEMORY>
-    :LIST_CACHE('HASH', %cache_hash)
-    :LIST_CACHE<FAULT>
-    :LIST_CACHE<MERGE>
+=head1 PORTING CAVEATS
+
+Because pads / stashes are immutable at runtime in Perl 6, one B<must>
+specify the value of the C<:INSTALL> named parameter as a variable with
+the C<&> sigil.
+
+Since Perl 6 does not have the concept of C<scalar> versus C<list> context,
+only one type of cache is used internally, as opposed to two different ones
+as in Perl 5.  Many functions / modules of the CPAN Butterfly Plan accept a
+C<:scalar> parameter to indicate the scalar context version of the called
+function is requested.  Since this is a parameter like any other, it will
+be used to distinguish scalar vs list meaning by the default normalizer.
+
+Therefore there are no separate C<:SCALAR_CACHE> and C<:LIST_CACHE> named
+parameters necessary anymore: instead a single C<:CACHE> parameter is
+recognized, that only accepts either C<'MEMORY'> or a list with C<'HASH'>
+as a parameter (as there is no need for the C<'FAULT'> and C<'MERGE'> values
+anymore.
 
 =head1 DESCRIPTION
 
@@ -169,8 +207,7 @@ like this:
     memoize(function,
       NORMALIZER => function,
       INSTALL => my &newname,
-      SCALAR_CACHE => option,
-      LIST_CACHE => option
+      CACHE => option,
     );
 
 Each of these options is optional; you can include some, all, or none
@@ -244,8 +281,8 @@ that it computed for one argument list and return it as the result of
 calling the function with the other argument list, even if the
 argument lists look different.
 
-The default normalizer just concatenates the arguments with character
-28 in between.  (In ASCII, this is called FS or control-\.)  This
+The default normalizer just concatenates the stringified arguments with
+character 28 in between.  (In ASCII, this is called FS or control-\.)  This
 always works correctly for functions with only one string argument,
 and also when the arguments never contain character 28.  However, it
 can confuse certain argument lists:
@@ -286,23 +323,10 @@ values cached on the disk, so that they persist from one run of your
 program to the next, or you might like to associate some other
 interesting semantics with the cached values.
 
-There's a slight complication under the hood of C<Memoize>: There are
-actually I<two> caches, one for scalar values and one for list values.
-But Perl 6 doesn't have the concepts of C<scalar> or C<list> context.
-To mimic this behaviour, you can specify a named variables C<:scalar>,
-which will be propagated to the original function.
-
-When your function is called with C<:scalar>, then its return value is
-cached in one hash, and when your function is called without it,
-its value is cached in the other hash.  You can control the caching
-behavior of both contexts independently with these options.
-
-The argument to C<LIST_CACHE> or C<SCALAR_CACHE> must either be one of
+The argument to C<CACHE> must either be one of
 the following four strings:
 
     MEMORY
-    FAULT
-    MERGE
     HASH
 
 or else it must be a reference to an array whose first element is one of
@@ -328,7 +352,7 @@ persists after your program has exited.
 A typical example is:
 
     my %cache is MyStore[$filename];
-    memoize 'function', SCALAR_CACHE => [HASH => %cache];
+    memoize 'function', CACHE => [HASH => %cache];
 
 This has the effect of storing the cache in a C<MyStore> database
 whose name is in C<$filename>.  The cache will persist after the
@@ -342,102 +366,6 @@ because all its results have been precomputed.
 Another reason to use C<HASH> is to provide your own hash variable.
 You can then inspect or modify the contents of the hash to gain finer
 control over the cache management.
-
-=item C<FAULT>
-
-C<FAULT> means that you never expect to call the function in scalar
-(or list) context, and that if C<Memoize> detects such a call, it
-should abort the program.  The error message is one of
-
-    `foo' function called in forbidden list context at line ...
-    `foo' function called in forbidden scalar context at line ...
-
-=item C<MERGE>
-
-C<MERGE> normally means that the memoized function does not
-distinguish between list and sclar context, and that return values in
-both contexts should be stored together.  Both C<LIST_CACHE =E<gt>
-MERGE> and C<SCALAR_CACHE =E<gt> MERGE> mean the same thing.
-
-Consider this function:
-
-    sub complicated {
-        # ... time-consuming calculation of $result
-        return $result;
-    }
-
-The C<complicated> function will return the same numeric C<$result>
-regardless of whether it is called in list or in scalar context.
-
-Normally, the following code will result in two calls to C<complicated>, even
-if C<complicated> is memoized:
-
-    $x = complicated(142);
-    ($y) = complicated(142);
-    $z = complicated(142);
-
-The first call will cache the result, say 37, in the scalar cache; the
-second will cach the list C<(37)> in the list cache.  The third call
-doesn't call the real C<complicated> function; it gets the value 37
-from the scalar cache.
-
-Obviously, the second call to C<complicated> is a waste of time, and
-storing its return value is a waste of space.  Specifying :LIST_CACHE\<MERGE>
-will make C<memoize> use the same cache for scalar and list context return
-values, so that the second call uses the scalar cache that was populated by
-the first call.  C<complicated> ends up being called only once, and both
-subsequent calls return C<3> from the cache, regardless of the calling context.
-
-=head3 List values in scalar context
-
-Consider this function:
-
-    sub iota { return reverse (1..$_[0]) }
-
-This function normally returns a list.  Suppose you memoize it and
-merge the caches:
-
-    memoize 'iota', SCALAR_CACHE => 'MERGE';
-
-    @i7 = iota(7);
-    $i7 = iota(7);
-
-Here the first call caches the list (1,2,3,4,5,6,7).  The second call
-does not really make sense. C<Memoize> cannot guess what behavior
-C<iota> should have in scalar context without actually calling it in
-scalar context.  Normally C<Memoize> I<would> call C<iota> in scalar
-context and cache the result, but the C<SCALAR_CACHE =E<gt> 'MERGE'>
-option says not to do that, but to use the cache list-context value
-instead. But it cannot return a list of seven elements in a scalar
-context. In this case C<$i7> will receive the B<first element> of the
-cached list value, namely 7.
-
-=head3 Merged disk caches
-
-Another use for C<MERGE> is when you want both kinds of return values
-stored in the same disk file; this saves you from having to deal with
-two disk files instead of one.  You can use a normalizer function to
-keep the two sets of return values separate.  For example:
-
-    tie my %cache => 'MLDBM', 'DB_File', $filename, ...;
-
-    memoize 'myfunc',
-      NORMALIZER   => 'n',
-      SCALAR_CACHE => [HASH => \%cache],
-      LIST_CACHE   => 'MERGE',
-    ;
-
-    sub n(:$scalar) {
-        my $context = $scalar ?? 'S' !! 'L';
-        # ... now compute the hash key from the arguments ...
-        $hashkey = "$context:$hashkey";
-    }
-
-This normalizer function will store scalar context return values in
-the disk file under keys that begin with C<S:>, and list context
-return values under keys that begin with C<L:>.
-
-=back
 
 =head1 OTHER FACILITIES
 
