@@ -6,6 +6,7 @@ module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
     multi sub memoize(
       &code, :$NORMALIZER, :$INSTALL, :$SCALAR_CACHE, :$LIST_CACHE
     ) {
+
     }
 
     our sub unmemoize(&code) is export(:ALL) { }
@@ -37,27 +38,27 @@ Memoize - Port of Perl 5's Memoize 1.03
 =head1 SYNOPSIS
 
     use Memoize;
-    memoize('slow_function');
+    memoize(&slow_function);
     slow_function(arguments);    # Is faster than it was before
 
 This is normally all you need to know. However, many options are available:
 
-    memoize(function, options...);
+    memoize(&function, options...);
 
 Options include:
 
-    NORMALIZER => function
-    INSTALL => new_name
+    NORMALIZER => &function
+    INSTALL => my &new_name
      
-    SCALAR_CACHE => 'MEMORY'
-    SCALAR_CACHE => ['HASH', %cache_hash ]
-    SCALAR_CACHE => 'FAULT'
-    SCALAR_CACHE => 'MERGE'
+    :SCALAR_CACHE<MEMORY>
+    :SCALAR_CACHE('HASH', %cache_hash)
+    :SCALAR_CACHE<FAULT>
+    :SCALAR_CACHE<MERGE>
      
-    LIST_CACHE => 'MEMORY'
-    LIST_CACHE => ['HASH', %cache_hash ]
-    LIST_CACHE => 'FAULT'
-    LIST_CACHE => 'MERGE'
+    :LIST_CACHE<MEMORY>
+    :LIST_CACHE('HASH', %cache_hash)
+    :LIST_CACHE<FAULT>
+    :LIST_CACHE<MERGE>
 
 =head1 DESCRIPTION
 
@@ -166,7 +167,7 @@ like this:
 
 	memoize(function,
       NORMALIZER => function,
-	  INSTALL => newname,
+	  INSTALL => my &newname,
       SCALAR_CACHE => option,
 	  LIST_CACHE => option
     );
@@ -176,11 +177,12 @@ of them.
 
 =head2 INSTALL
 
-If you supply a function name with C<INSTALL>, memoize will install
-the new, memoized version of the function under the name you give.
+If you supply variable with a C<&> sigil with C<INSTALL>, memoize will
+install the new, memoized version of the function in that variable..
 For example, 
 
-	memoize('fib', INSTALL => 'fastfib')
+    my &fastfib;
+	memoize('fib', INSTALL => &fastfib)
 
 installs the memoized version of C<fib> as C<fastfib>; without the
 C<INSTALL> option it would have replaced the old C<fib> with the
@@ -457,7 +459,7 @@ unmemoized version if appropriate.  It returns a reference to the
 unmemoized version of the function.
 
 If you ask it to unmemoize a function that was never memoized, it
-croaks.
+will throw an exception.
 
 =head2 C<flush_cache>
 
