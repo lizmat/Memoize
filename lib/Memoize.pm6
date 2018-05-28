@@ -8,36 +8,42 @@ module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
         has &.normalizer;
     }
 
+
+
     my sub wrap-it(&code) {
 
     }
 
-    my sub simple-scalar-hash-cache(|) {
-        
-    }
 
-
-    my multi sub simple-hash-cache(:$scalar!, |c) {
-    }
     my multi sub simple-hash-cache(|) {
     }
 
     our proto sub memoize(|) is export(:DEFAULT:ALL) {*}
+
+    # Cannot handle multiple memoization as we can only mixin the Memoized
+    # role once.  Since this appears to be a remote chance this will happen
+    # with reason, but instead is most likely the result of a bug in the
+    # calling code, we just bail here should this happen.
+    multi sub memoize(Memoized: &code, |c) {
+        die "Already memoized &code.name()&code.signature.gist()";
+    }
+
+    # The simplest case
     multi sub memoize(Str() $name) {
         my &code = CALLER::{ '&' ~ $name };
         my $unwrapper := &code.wrap(
         )
         memoize( CALLER::{ '&' ~ $name }, :wrap, |c)
     }
-    multi sub memoize(&code,:$INSTALL! is rw, :$NORMALIZER, :$CACHE,:$wrap) {
+    multi sub memoize(&code,:$INSTALL! is rw, :$NORMALIZER, :$CACHE, :$wrap) {
 
     }
     multi sub memoize(&code, :$NORMALIZER, :$CACHE, :$wrap) {
     }
 
-    our sub unmemoize(&code) is export(:ALL) { }
+    our sub unmemoize(Memoized:D &code) is export(:ALL) { }
 
-    our sub flush_cache(&code) is export(:ALL) { }
+    our sub flush_cache(Memoized:D &code) is export(:ALL) { }
 }
 
 sub EXPORT(*@args) {
