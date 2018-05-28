@@ -71,12 +71,12 @@ the function compute the value all over again.
 Here is an extreme example.  Consider the Fibonacci sequence, defined
 by the following function:
 
-	# Compute Fibonacci numbers
-	sub fib {
-	  my $n = shift;
-	  return $n if $n < 2;
-	  fib($n-1) + fib($n-2);
-	}
+    # Compute Fibonacci numbers
+    sub fib {
+        my $n = shift;
+        return $n if $n < 2;
+        fib($n-1) + fib($n-2);
+    }
 
 This function is very slow.  Why?  To compute fib(14), it first wants
 to compute fib(13) and fib(12), and add the results.  But to compute
@@ -103,23 +103,24 @@ recursive calls to `fib', it makes 15.  This makes the function about
 You could do the memoization yourself, by rewriting the function, like
 this:
 
-	# Compute Fibonacci numbers, memoized version
-	{ my @fib;
-  	  sub fib {
-	    my $n = shift;
-	    return $_ with @fib[$n];
-	    return @fib[$n] = $n if $n < 2;
+    # Compute Fibonacci numbers, memoized version
+    {
+        my @fib;
+        sub fib {
+            my $n = shift;
+            return $_ with @fib[$n];
+            return @fib[$n] = $n if $n < 2;
 
-	    @fib[$n] = fib($n-1) + fib($n-2);
-	  }
+            @fib[$n] = fib($n-1) + fib($n-2);
+        }
     }
 
 Or you could use this module, like this:
 
-	use Memoize;
-	memoize('fib');
+    use Memoize;
+    memoize('fib');
 
-	# Rest of the fib function just like the original version.
+    # Rest of the fib function just like the original version.
 
 This makes it easy to turn memoizing on and off.
 
@@ -147,7 +148,7 @@ functions in this package are None of Your Business.
 
 You should say
 
-	memoize(function)
+    memoize(function)
 
 where C<function> is the name of the function or the C<Routine> object that
 you want to memoize.  C<memoize> returns a reference to the new, memoized
@@ -165,11 +166,11 @@ There are some optional options you can pass to C<memoize> to change
 the way it behaves a little.  To supply options, invoke C<memoize>
 like this:
 
-	memoize(function,
+    memoize(function,
       NORMALIZER => function,
-	  INSTALL => my &newname,
+      INSTALL => my &newname,
       SCALAR_CACHE => option,
-	  LIST_CACHE => option
+      LIST_CACHE => option
     );
 
 Each of these options is optional; you can include some, all, or none
@@ -182,7 +183,7 @@ install the new, memoized version of the function in that variable..
 For example,
 
     my &fastfib;
-	memoize('fib', INSTALL => &fastfib)
+    memoize('fib', INSTALL => &fastfib)
 
 installs the memoized version of C<fib> as C<fastfib>; without the
 C<INSTALL> option it would have replaced the old C<fib> with the
@@ -195,22 +196,22 @@ C<INSTALL =E<gt> False> or C<:!INSTALL>.
 
 Suppose your function looks like this:
 
-	# Typical call: f('aha!', A => 11, B => 12);
-	sub f($a, *%hash {
-	  %hash{B} ||= 2;  # B defaults to 2
-	  %hash{C} ||= 7;  # C defaults to 7
+    # Typical call: f('aha!', A => 11, B => 12);
+    sub f($a, *%hash {
+        %hash{B} ||= 2;  # B defaults to 2
+        %hash{C} ||= 7;  # C defaults to 7
 
-	  # Do something with $a, %hash
-	}
+        # Do something with $a, %hash
+    }
 
 Now, the following calls to your function are all completely equivalent:
 
-	f(OUCH);
-	f(OUCH, B => 2);
-	f(OUCH, C => 7);
-	f(OUCH, B => 2, C => 7);
-	f(OUCH, C => 7, B => 2);
-	(etc.)
+    f(OUCH);
+    f(OUCH, B => 2);
+    f(OUCH, C => 7);
+    f(OUCH, B => 2, C => 7);
+    f(OUCH, C => 7, B => 2);
+    (etc.)
 
 However, unless you tell C<Memoize> that these calls are equivalent,
 it will not know that, and it will compute the values for these
@@ -221,21 +222,21 @@ program arguments into a string in a way that equivalent arguments
 turn into the same string.  A C<NORMALIZER> function for C<f> above
 might look like this:
 
-	sub normalize_f($a,*%hash {
-	  %hash{B} ||= 2;
-	  $hash{C} ||= 7;
+    sub normalize_f($a,*%hash {
+        %hash{B} ||= 2;
+        $hash{C} ||= 7;
 
-	  join(',', $a, %hash.sort>>.kv);
-	}
+        join(',', $a, %hash.sort>>.kv);
+    }
 
 Each of the argument lists above comes out of the C<normalize_f>
 function looking exactly the same, like this:
 
-	OUCH,B,2,C,7
+    OUCH,B,2,C,7
 
 You would tell C<Memoize> to use this normalizer this way:
 
-	memoize('f', NORMALIZER => 'normalize_f');
+    memoize('f', NORMALIZER => 'normalize_f');
 
 C<memoize> knows that if the normalized version of the arguments is
 the same for two argument lists, then it can safely look up the value
@@ -249,16 +250,16 @@ always works correctly for functions with only one string argument,
 and also when the arguments never contain character 28.  However, it
 can confuse certain argument lists:
 
-	normalizer("a\034", "b")
-	normalizer("a", "\034b")
-	normalizer("a\034\034b")
+    normalizer("a\034", "b")
+    normalizer("a", "\034b")
+    normalizer("a\034\034b")
 
 for example.
 
 Since hash keys are strings, the default normalizer will not
 distinguish between type objects / Nil and the empty string.
 
-	sub normalize($a, @b) { join ' ', $a, @b }
+    sub normalize($a, @b) { join ' ', $a, @b }
 
 For the example above, this produces the key "13 1 2 3 4 5 6 7".
 
@@ -266,11 +267,11 @@ Another use for normalizers is when the function depends on data other
 than those in its arguments.  Suppose you have a function which
 returns a value which depends on the current hour of the day:
 
-	sub on_duty($problem_type) {
+    sub on_duty($problem_type) {
         my $hour = DateTime.now.hour;
         my $fh = open("$DIR/$problem_type") or die...;
         $fh.lines.skip(DateTime.now.hour).head;
-	}
+    }
 
 At 10:23, this function generates the 10th line of a data file; at
 3:45 PM it generates the 15th line instead.  By default, C<Memoize>
@@ -348,8 +349,8 @@ C<FAULT> means that you never expect to call the function in scalar
 (or list) context, and that if C<Memoize> detects such a call, it
 should abort the program.  The error message is one of
 
-	`foo' function called in forbidden list context at line ...
-	`foo' function called in forbidden scalar context at line ...
+    `foo' function called in forbidden list context at line ...
+    `foo' function called in forbidden scalar context at line ...
 
 =item C<MERGE>
 
@@ -360,10 +361,10 @@ MERGE> and C<SCALAR_CACHE =E<gt> MERGE> mean the same thing.
 
 Consider this function:
 
-	sub complicated {
-          # ... time-consuming calculation of $result
-          return $result;
-        }
+    sub complicated {
+        # ... time-consuming calculation of $result
+        return $result;
+    }
 
 The C<complicated> function will return the same numeric C<$result>
 regardless of whether it is called in list or in scalar context.
@@ -418,19 +419,19 @@ stored in the same disk file; this saves you from having to deal with
 two disk files instead of one.  You can use a normalizer function to
 keep the two sets of return values separate.  For example:
 
-        tie my %cache => 'MLDBM', 'DB_File', $filename, ...;
+    tie my %cache => 'MLDBM', 'DB_File', $filename, ...;
 
-	memoize 'myfunc',
-	  NORMALIZER => 'n',
-	  SCALAR_CACHE => [HASH => \%cache],
-	  LIST_CACHE => 'MERGE',
-	;
+    memoize 'myfunc',
+      NORMALIZER   => 'n',
+      SCALAR_CACHE => [HASH => \%cache],
+      LIST_CACHE   => 'MERGE',
+    ;
 
-	sub n {
-	  my $context = wantarray() ? 'L' : 'S';
-	  # ... now compute the hash key from the arguments ...
-	  $hashkey = "$context:$hashkey";
-	}
+    sub n(:$scalar) {
+        my $context = $scalar ?? 'S' !! 'L';
+        # ... now compute the hash key from the arguments ...
+        $hashkey = "$context:$hashkey";
+    }
 
 This normalizer function will store scalar context return values in
 the disk file under keys that begin with C<S:>, and list context
