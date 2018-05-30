@@ -46,8 +46,7 @@ DESCRIPTION
 Here is an extreme example. Consider the Fibonacci sequence, defined by the following function:
 
     # Compute Fibonacci numbers
-    sub fib {
-        my $n = shift;
+    sub fib($n) {
         return $n if $n < 2;
         fib($n-1) + fib($n-2);
     }
@@ -61,8 +60,7 @@ You could do the memoization yourself, by rewriting the function, like this:
     # Compute Fibonacci numbers, memoized version
     {
         my @fib;
-        sub fib {
-            my $n = shift;
+        sub fib($n) {
             return $_ with @fib[$n];
             return @fib[$n] = $n if $n < 2;
 
@@ -186,14 +184,19 @@ At 10:23, this function generates the 10th line of a data file; at 3:45 PM it ge
 
 Normally, `Memoize` caches your function's return values into an ordinary Perl hash variable. However, you might like to have the values cached on the disk, so that they persist from one run of your program to the next, or you might like to associate some other interesting semantics with the cached values.
 
-The argument to `CACHE` must either the string `MEMORY` or an object that performs the `Associative` role.
+The argument to `CACHE` must either the string `MEMORY`, the string `MULTI` or an object that performs the `Associative` role.
 
     MEMORY
+    MULTI
     %hash
 
   * `MEMORY`
 
 `MEMORY` means that return values from the function will be cached in an ordinary Perl 6 hash. The hash will not persist after the program exits. This is the default.
+
+  * `MULTI`
+
+`MULTI` means that return values from the function will be cached in a Perl 6 hash that has been hardened to function correctly in a multi-threaded program (which is slower due to necessary locking). The hash will not persist after the program exits.
 
   * `%hash`
 
@@ -223,7 +226,7 @@ OTHER FACILITIES
 
 There's an `unmemoize` function that you can import if you want to. Why would you want to? Here's an example: Suppose you have your cache tied to a DBM file, and you want to make sure that the cache is written out to disk if someone interrupts the program. If the program exits normally, this will happen anyway, but if someone types control-C or something then the program will terminate immediately without synchronizing the database. So what you can do instead is
 
-    $SIG{INT} = sub { unmemoize 'function' };
+    signal(SIGINT).tap: { unmemoize 'function'; exit }
 
 `unmemoize` accepts a reference to, or the name of a previously memoized function, and undoes whatever it did to provide the memoized version in the first place, including making the name refer to the unmemoized version if appropriate. It returns a reference to the unmemoized version of the function.
 
@@ -257,9 +260,8 @@ This function takes no arguments, and as far as `Memoize` is concerned, it alway
 
 Do not memoize a function with side effects.
 
-    sub f {
+    sub f($a,$b) {
 
-    my ($a, $b) = @_;
     my $s = $a + $b;
     say "$a + $b = $s.";
 

@@ -1,6 +1,6 @@
 use v6.c;
 
-module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
+module Memoize:ver<0.0.2>:auth<cpan:ELIZABETH> {
 
     # Role to be mixed in with given Callables.  Keeps the unwrap handle
     # available for unmemoizing.
@@ -104,10 +104,10 @@ module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
     }
 
     our proto sub flush_cache(|) is export(:ALL) {*}
-    multi sub flush_cache(Str() $name) {
+    multi sub flush_cache(Str() $name --> Nil) {
         flush_cache(name-to-code(CALLERS::, $name))
     }
-    multi sub flush_cache(Memoized:D $code) {
+    multi sub flush_cache(Memoized:D $code --> Nil) {
         # For some reason, Map.STORE doesn't have a multi for .STORE()
         # so we feed it the empty Slip
         $code.cache.STORE( Empty )

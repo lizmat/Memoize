@@ -1,6 +1,9 @@
 Revision history for Memoize
 
 {{$NEXT}}
+    - flush_cache() now returns Nil always
+    - Pod adaptions: removed p5isms, added :CACHE<MULTI>
+    - added tests for :CACHE(my %h) and whether flush_cache works
 
 0.0.1  2018-05-30T14:44:01+02:00
     - Initial version
