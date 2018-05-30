@@ -197,8 +197,7 @@ Here is an extreme example.  Consider the Fibonacci sequence, defined
 by the following function:
 
     # Compute Fibonacci numbers
-    sub fib {
-        my $n = shift;
+    sub fib($n) {
         return $n if $n < 2;
         fib($n-1) + fib($n-2);
     }
@@ -231,8 +230,7 @@ this:
     # Compute Fibonacci numbers, memoized version
     {
         my @fib;
-        sub fib {
-            my $n = shift;
+        sub fib($n) {
             return $_ with @fib[$n];
             return @fib[$n] = $n if $n < 2;
 
@@ -393,10 +391,11 @@ values cached on the disk, so that they persist from one run of your
 program to the next, or you might like to associate some other
 interesting semantics with the cached values.
 
-The argument to C<CACHE> must either the string C<MEMORY> or an object
-that performs the C<Associative> role.
+The argument to C<CACHE> must either the string C<MEMORY>, the string
+C<MULTI> or an object that performs the C<Associative> role.
 
     MEMORY
+    MULTI
     %hash
 
 =item C<MEMORY>
@@ -404,6 +403,13 @@ that performs the C<Associative> role.
 C<MEMORY> means that return values from the function will be cached in
 an ordinary Perl 6 hash.  The hash will not persist after the program exits.
 This is the default.
+
+=item C<MULTI>
+
+C<MULTI> means that return values from the function will be cached in
+a Perl 6 hash that has been hardened to function correctly in a multi-threaded
+program (which is slower due to necessary locking).  The hash will not
+persist after the program exits.
 
 =item C<%hash>
 
@@ -451,7 +457,7 @@ exits normally, this will happen anyway, but if someone types
 control-C or something then the program will terminate immediately
 without synchronizing the database.  So what you can do instead is
 
-    $SIG{INT} = sub { unmemoize 'function' };
+    signal(SIGINT).tap: { unmemoize 'function'; exit }
 
 C<unmemoize> accepts a reference to, or the name of a previously
 memoized function, and undoes whatever it did to provide the memoized
@@ -504,8 +510,7 @@ every time you call it after that.
 
 Do not memoize a function with side effects.
 
-	sub f {
-        my ($a, $b) = @_;
+	sub f($a,$b) {
         my $s = $a + $b;
         say "$a + $b = $s.";
 	}
