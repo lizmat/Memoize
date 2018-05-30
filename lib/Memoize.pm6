@@ -2,48 +2,116 @@ use v6.c;
 
 module Memoize:ver<0.0.1>:auth<cpan:ELIZABETH> {
 
+    # Role to be mixed in with given Callables.  Keeps the unwrap handle
+    # available for unmemoizing.
     role Memoized {
-        has %cache;
-        has $lock = Lock.new;
-        has &.normalizer;
+        has &.original;
+        has %.cache;
+        has $.unwrap-handle;
+        method memoize-with(\original, \cache, \unwrap-handle) {
+            &!original      := original;
+            %!cache         := cache;
+            $!unwrap-handle := unwrap-handle;
+            self
+        }
     }
 
-
-
-    my sub wrap-it(&code) {
-
+    # Role to mix into a Hash to make it thread-safe for Memoize
+    role Multi {
+        has $!lock = Lock.new;
+        method AT-KEY(\key)   {
+            self.EXISTS-KEY(key)
+              ?? self.Hash::AT-KEY(key)
+              !! $!lock.protect: { self.Hash::AT-KEY(key) }
+        }
+        method BIND-KEY(\key,\value) {
+            $!lock.protect: { self.Hash::BIND-KEY(key, value) }
+        }
+        method STORE(|c) {
+            $!lock.protect: { self.Hash::STORE(|c) }
+        }
     }
 
-
-    my multi sub simple-hash-cache(|) {
+    # The default normalizer
+    my constant joiner = chr(28);
+    sub default-normalizer(|c) {
+        c.list.join(joiner) ~ joiner ~ c.hash.join(joiner)
     }
 
+    # Convert name of sub to actual code object, or die
+    sub name-to-code(\stash, $name) {
+        stash.AT-KEY('&' ~ $name) // die "Could not find sub &$name"
+    }
+
+    # Make sure we export the proto only
     our proto sub memoize(|) is export(:DEFAULT:ALL) {*}
 
     # Cannot handle multiple memoization as we can only mixin the Memoized
     # role once.  Since this appears to be a remote chance this will happen
     # with reason, but instead is most likely the result of a bug in the
     # calling code, we just bail here should this happen.
-    multi sub memoize(Memoized: &code, |c) {
-        die "Already memoized &code.name()&code.signature.gist()";
+    multi sub memoize(Memoized:D $code, |c) {
+        die "Already memoized $code.name()$code.signature.gist()";
     }
 
-    # The simplest case
-    multi sub memoize(Str() $name) {
-        my &code = CALLER::{ '&' ~ $name };
-        my $unwrapper := &code.wrap(
-        )
-        memoize( CALLER::{ '&' ~ $name }, :wrap, |c)
-    }
-    multi sub memoize(&code,:$INSTALL! is rw, :$NORMALIZER, :$CACHE, :$wrap) {
-
-    }
-    multi sub memoize(&code, :$NORMALIZER, :$CACHE, :$wrap) {
+    # The string case: convert string to Callable and pass on
+    multi sub memoize(Str() $name, |c) {
+        memoize( name-to-code(CALLERS::, $name), |c )
     }
 
-    our sub unmemoize(Memoized:D &code) is export(:ALL) { }
+    # The Callable frontend cases
+    multi sub memoize(&code) {
+        memoize( &code, NORMALIZER => &default-normalizer )
+    }
+    multi sub memoize(&code, :$CACHE!) {
+        memoize( &code, NORMALIZER => &default-normalizer, :$CACHE )
+    }
+    multi sub memoize(&code, :&NORMALIZER!) {
+        memoize( &code, :&NORMALIZER, :CACHE(my %) )
+    }
 
-    our sub flush_cache(Memoized:D &code) is export(:ALL) { }
+    # The case of Callable, Normalizer and Cache
+    multi sub memoize(&code, :&NORMALIZER!, :%CACHE!) {
+        my &original = &code.clone;
+        (&code does Memoized).memoize-with(
+          &original,
+          %CACHE,
+          &code.wrap( -> |c {
+            %CACHE.EXISTS-KEY(my $key := NORMALIZER(c))
+              ?? %CACHE.AT-KEY($key)
+              !! %CACHE.BIND-KEY($key,callsame);
+          })
+        );
+    }
+
+    # This candidate *must* be after the :&CACHE
+    multi sub memoize(&code, :&NORMALIZER!, :$CACHE!) {
+        $CACHE eq 'MEMORY'
+          ?? memoize( &code, :&NORMALIZER )
+          !! $CACHE eq 'MULTI'
+            ?? memoize( &code, :&NORMALIZER, :CACHE(my %h does Multi) )
+            !! die( "Illegal value for CACHE: $CACHE.perl()" )
+    }
+
+    our proto sub unmemoize(|) is export(:ALL) {*}
+    multi sub unmemoize(Str() $name) {
+        unmemoize(CALLERS::{ '&' ~ $name })
+    }
+    multi sub unmemoize(Memoized:D $code) {
+        $code.cache.?FLUSH;
+        $code.unwrap($code.unwrap-handle);
+        $code.original
+    }
+
+    our proto sub flush_cache(|) is export(:ALL) {*}
+    multi sub flush_cache(Str() $name) {
+        flush_cache(name-to-code(CALLERS::, $name))
+    }
+    multi sub flush_cache(Memoized:D $code) {
+        # For some reason, Map.STORE doesn't have a multi for .STORE()
+        # so we feed it the empty Slip
+        $code.cache.STORE( Empty )
+    }
 }
 
 sub EXPORT(*@args) {
@@ -79,17 +147,22 @@ This is normally all you need to know. However, many options are available:
 
 Options include:
 
-    NORMALIZER => &function
-    INSTALL => my &new_name
-
-    :CACHE<MEMORY>
-    :CACHE('HASH', %cache_hash)
+    :NORMALIZER(&function)  # default: join with \x[1C] (aka chr(28)
+    :CACHE<MEMORY>          # in memory, single threaded, default
+    :CACHE<MULTI>           # in memory, multi-threaded, slower
+    :CACHE(%cache_hash)     # any Associative object
 
 =head1 PORTING CAVEATS
 
-Because pads / stashes are immutable at runtime in Perl 6, one B<must>
-specify the value of the C<:INSTALL> named parameter as a variable with
-the C<&> sigil.
+Because pads / stashes are immutable at runtime and the way code can be
+wrapped in Perl 6, it is B<not> possible to install a memoized version of
+a function B<and> not wrap the original code.  Therefore it seemed more
+sensible to remove the INSTALL feature altogether, at least at this point
+in time.
+
+The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a
+thread-safe in memory storage, which is slower because of the required
+locking.
 
 Since Perl 6 does not have the concept of C<scalar> versus C<list> context,
 only one type of cache is used internally, as opposed to two different ones
@@ -103,6 +176,14 @@ parameters necessary anymore: instead a single C<:CACHE> parameter is
 recognized, that only accepts either C<'MEMORY'> or a list with C<'HASH'>
 as a parameter (as there is no need for the C<'FAULT'> and C<'MERGE'> values
 anymore.
+
+Since Perl 6 has proper typing, it can recognize that an object that does
+the C<Associative> role is being passed as the parameter with C<:CACHE>, so
+there is no need to specify the word 'HASH' anymore.
+
+The default in-memory backend for memoized values is B<not> thread-safe.
+If you want multiple threads to work with the same memoized function, you
+will need to specify a CACHE parameter with a backend that B<is> threadsafe.
 
 =head1 DESCRIPTION
 
@@ -212,28 +293,11 @@ like this:
 
     memoize(function,
       NORMALIZER => function,
-      INSTALL => my &newname,
-      CACHE => option,
+      CACHE      => option,
     );
 
 Each of these options is optional; you can include some, all, or none
 of them.
-
-=head2 INSTALL
-
-If you supply variable with a C<&> sigil with C<INSTALL>, memoize will
-install the new, memoized version of the function in that variable..
-For example,
-
-    my &fastfib;
-    memoize('fib', INSTALL => &fastfib)
-
-installs the memoized version of C<fib> as C<fastfib>; without the
-C<INSTALL> option it would have replaced the old C<fib> with the
-memoized version.
-
-To prevent C<memoize> from installing the memoized version anywhere, use
-C<INSTALL =E<gt> False> or C<:!INSTALL>.
 
 =head2 NORMALIZER
 
@@ -329,14 +393,11 @@ values cached on the disk, so that they persist from one run of your
 program to the next, or you might like to associate some other
 interesting semantics with the cached values.
 
-The argument to C<CACHE> must either be one of
-the following four strings:
+The argument to C<CACHE> must either the string C<MEMORY> or an object
+that performs the C<Associative> role.
 
     MEMORY
-    HASH
-
-or else it must be a reference to an array whose first element is one of
-these four strings, such as C<[HASH, arguments...]>.
+    %hash
 
 =item C<MEMORY>
 
@@ -344,11 +405,10 @@ C<MEMORY> means that return values from the function will be cached in
 an ordinary Perl 6 hash.  The hash will not persist after the program exits.
 This is the default.
 
-=item C<HASH>
+=item C<%hash>
 
-C<HASH> allows you to specify that a particular hash that you supply
-will be used as the cache.  Any object that does the C<Associative> role
-is acceptable.
+Allows you to specify that a particular hash that you supply will be used as
+the cache.  Any object that does the C<Associative> role is acceptable.
 
 Such an C<Associative> object can have any semantics at all.  It is typically
 tied to an on-disk database, so that cached values are stored in the database
@@ -358,7 +418,13 @@ persists after your program has exited.
 A typical example is:
 
     my %cache is MyStore[$filename];
-    memoize 'function', CACHE => [HASH => %cache];
+    memoize 'function', CACHE => %cache;
+
+Or if you want to use the "name of named parameter is the same as the
+variable" feature of Perl 6:
+
+    my %CACHE is MyStore[$filename];
+    memoize 'function', :%CACHE;
 
 This has the effect of storing the cache in a C<MyStore> database
 whose name is in C<$filename>.  The cache will persist after the
