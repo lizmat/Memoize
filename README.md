@@ -32,7 +32,7 @@ The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a thread-
 
 Since Perl 6 does not have the concept of `scalar` versus `list` context, only one type of cache is used internally, as opposed to two different ones as in Perl 5. Many functions / modules of the CPAN Butterfly Plan accept a `:scalar` parameter to indicate the scalar context version of the called function is requested. Since this is a parameter like any other, it will be used to distinguish scalar vs list meaning by the default normalizer.
 
-Therefore there are no separate `:SCALAR_CACHE` and `:LIST_CACHE` named parameters necessary anymore: instead a single `:CACHE` parameter is recognized, that only accepts either `'MEMORY'` or a list with `'HASH'` as a parameter (as there is no need for the `'FAULT'` and `'MERGE'` values anymore.
+Therefore there are no separate `:SCALAR_CACHE` and `:LIST_CACHE` named parameters necessary anymore: instead a single `:CACHE` parameter is recognized, that only accepts either `'MEMORY'`, `'MULTI'` or an object that does the `Associative` role as a parameter (as there is no need for the `'FAULT'` and `'MERGE'` values anymore).
 
 Since Perl 6 has proper typing, it can recognize that an object that does the `Associative` role is being passed as the parameter with `:CACHE`, so there is no need to specify the word 'HASH' anymore.
 
@@ -53,7 +53,7 @@ Here is an extreme example. Consider the Fibonacci sequence, defined by the foll
 
 This function is very slow. Why? To compute fib(14), it first wants to compute fib(13) and fib(12), and add the results. But to compute fib(13), it first has to compute fib(12) and fib(11), and then it comes back and computes fib(12) all over again even though the answer is the same. And both of the times that it wants to compute fib(12), it has to compute fib(11) from scratch, and then it has to do it again each time it wants to compute fib(13). This function does so much recomputing of old results that it takes a really long time to run---fib(14) makes 1,200 extra recursive calls to itself, to compute and recompute things that it already computed.
 
-This function is a good candidate for memoization. If you memoize the `fib' function above, it will compute fib(14) exactly once, the first time it needs to, and then save the result in a table. Then if you ask for fib(14) again, it gives you the result out of the table. While computing fib(14), instead of computing fib(12) twice, it does it once; the second time it needs the value it gets it from the table. It doesn't compute fib(11) four times; it computes it once, getting it from the table the next three times. Instead of making 1,200 recursive calls to `fib', it makes 15. This makes the function about 150 times faster.
+This function is a good candidate for memoization. If you memoize the 'fib' function above, it will compute fib(14) exactly once, the first time it needs to, and then save the result in a table. Then if you ask for fib(14) again, it gives you the result out of the table. While computing fib(14), instead of computing fib(12) twice, it does it once; the second time it needs the value it gets it from the table. It doesn't compute fib(11) four times; it computes it once, getting it from the table the next three times. Instead of making 1,200 recursive calls to 'fib', it makes 15. This makes the function about 150 times faster.
 
 You could do the memoization yourself, by rewriting the function, like this:
 
@@ -226,9 +226,9 @@ OTHER FACILITIES
 
 There's an `unmemoize` function that you can import if you want to. Why would you want to? Here's an example: Suppose you have your cache tied to a DBM file, and you want to make sure that the cache is written out to disk if someone interrupts the program. If the program exits normally, this will happen anyway, but if someone types control-C or something then the program will terminate immediately without synchronizing the database. So what you can do instead is
 
-    signal(SIGINT).tap: { unmemoize 'function'; exit }
+    signal(SIGINT).tap: { unmemoize &function; exit }
 
-`unmemoize` accepts a reference to, or the name of a previously memoized function, and undoes whatever it did to provide the memoized version in the first place, including making the name refer to the unmemoized version if appropriate. It returns a reference to the unmemoized version of the function.
+`unmemoize` accepts the `Callable` object, or the name of a previously memoized function, and undoes whatever it did to provide the memoized version in the first place, including making the name refer to the unmemoized version if appropriate. It returns a reference to the unmemoized version of the function.
 
 If you ask it to unmemoize a function that was never memoized, it will throw an exception.
 

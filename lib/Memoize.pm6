@@ -1,6 +1,6 @@
 use v6.c;
 
-module Memoize:ver<0.0.2>:auth<cpan:ELIZABETH> {
+module Memoize:ver<0.0.3>:auth<cpan:ELIZABETH> {
 
     # Role to be mixed in with given Callables.  Keeps the unwrap handle
     # available for unmemoizing.
@@ -173,9 +173,9 @@ be used to distinguish scalar vs list meaning by the default normalizer.
 
 Therefore there are no separate C<:SCALAR_CACHE> and C<:LIST_CACHE> named
 parameters necessary anymore: instead a single C<:CACHE> parameter is
-recognized, that only accepts either C<'MEMORY'> or a list with C<'HASH'>
-as a parameter (as there is no need for the C<'FAULT'> and C<'MERGE'> values
-anymore.
+recognized, that only accepts either C<'MEMORY'>, C<'MULTI'> or an object
+that does the C<Associative> role as a parameter (as there is no need for
+the C<'FAULT'> and C<'MERGE'> values anymore).
 
 Since Perl 6 has proper typing, it can recognize that an object that does
 the C<Associative> role is being passed as the parameter with C<:CACHE>, so
@@ -214,14 +214,14 @@ run---fib(14) makes 1,200 extra recursive calls to itself, to compute
 and recompute things that it already computed.
 
 This function is a good candidate for memoization.  If you memoize the
-`fib' function above, it will compute fib(14) exactly once, the first
+'fib' function above, it will compute fib(14) exactly once, the first
 time it needs to, and then save the result in a table.  Then if you
 ask for fib(14) again, it gives you the result out of the table.
 While computing fib(14), instead of computing fib(12) twice, it does
 it once; the second time it needs the value it gets it from the table.
 It doesn't compute fib(11) four times; it computes it once, getting it
 from the table the next three times.  Instead of making 1,200
-recursive calls to `fib', it makes 15.  This makes the function about
+recursive calls to 'fib', it makes 15.  This makes the function about
 150 times faster.
 
 You could do the memoization yourself, by rewriting the function, like
@@ -457,9 +457,9 @@ exits normally, this will happen anyway, but if someone types
 control-C or something then the program will terminate immediately
 without synchronizing the database.  So what you can do instead is
 
-    signal(SIGINT).tap: { unmemoize 'function'; exit }
+    signal(SIGINT).tap: { unmemoize &function; exit }
 
-C<unmemoize> accepts a reference to, or the name of a previously
+C<unmemoize> accepts the C<Callable> object, or the name of a previously
 memoized function, and undoes whatever it did to provide the memoized
 version in the first place, including making the name refer to the
 unmemoized version if appropriate.  It returns a reference to the
