@@ -385,6 +385,8 @@ current hour in the normalizer:
 
     sub normalize(*@_) { join ' ', DateTime.now.hour, @_ }
 
+=head2 CACHE
+
 Normally, C<Memoize> caches your function's return values into an
 ordinary Perl hash variable.  However, you might like to have the
 values cached on the disk, so that they persist from one run of your
@@ -398,20 +400,20 @@ C<MULTI> or an object that performs the C<Associative> role.
     MULTI
     %hash
 
-=item C<MEMORY>
+=head3 MEMORY
 
 C<MEMORY> means that return values from the function will be cached in
 an ordinary Perl 6 hash.  The hash will not persist after the program exits.
 This is the default.
 
-=item C<MULTI>
+=head3 MULTI
 
 C<MULTI> means that return values from the function will be cached in
 a Perl 6 hash that has been hardened to function correctly in a multi-threaded
 program (which is slower due to necessary locking).  The hash will not
 persist after the program exits.
 
-=item C<%hash>
+=head3 %hash
 
 Allows you to specify that a particular hash that you supply will be used as
 the cache.  Any object that does the C<Associative> role is acceptable.
@@ -447,7 +449,7 @@ control over the cache management.
 
 =head1 OTHER FACILITIES
 
-=head2 C<unmemoize>
+=head2 unmemoize
 
 There's an C<unmemoize> function that you can import if you want to.
 Why would you want to?  Here's an example: Suppose you have your cache
@@ -468,7 +470,7 @@ unmemoized version of the function.
 If you ask it to unmemoize a function that was never memoized, it
 will throw an exception.
 
-=head2 C<flush_cache>
+=head2 flush_cache
 
 C<flush_cache(function)> will flush out the caches, discarding I<all>
 the cached data.  The argument may be a function name or a reference
@@ -489,7 +491,7 @@ any way you desire.  You may flush the cache by using C<%hash = ()>.
 
 Memoization is not a cure-all:
 
-=item *
+=head2 depending on program state
 
 Do not memoize a function whose behavior depends on program
 state other than its own arguments, such as global variables, the time
@@ -506,7 +508,7 @@ course, and the memoized version of this function will call C<time> once
 to get the current time, and it will return that same time
 every time you call it after that.
 
-=item *
+=head2 side effects
 
 Do not memoize a function with side effects.
 
@@ -523,7 +525,7 @@ expect the first time you ask it to print the sum of 2 and 3, but
 subsequent calls will return 1 (the return value of
 C<print>) without actually printing anything.
 
-=item *
+=head2 modified by caller
 
 Do not memoize a function that returns a data structure that is
 modified by its caller.
@@ -565,7 +567,7 @@ will modify $u2 as well as $u1, because both variables are references
 to the same array.  Had C<getusers> not been memoized, $u1 and $u2
 would have referred to different arrays.
 
-=item *
+=head2 simple function
 
 Do not memoize a very simple function.
 

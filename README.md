@@ -182,6 +182,9 @@ At 10:23, this function generates the 10th line of a data file; at 3:45 PM it ge
 
     sub normalize(*@_) { join ' ', DateTime.now.hour, @_ }
 
+CACHE
+-----
+
 Normally, `Memoize` caches your function's return values into an ordinary Perl hash variable. However, you might like to have the values cached on the disk, so that they persist from one run of your program to the next, or you might like to associate some other interesting semantics with the cached values.
 
 The argument to `CACHE` must either the string `MEMORY`, the string `MULTI` or an object that performs the `Associative` role.
@@ -190,15 +193,15 @@ The argument to `CACHE` must either the string `MEMORY`, the string `MULTI` or a
     MULTI
     %hash
 
-  * `MEMORY`
+### MEMORY
 
 `MEMORY` means that return values from the function will be cached in an ordinary Perl 6 hash. The hash will not persist after the program exits. This is the default.
 
-  * `MULTI`
+### MULTI
 
 `MULTI` means that return values from the function will be cached in a Perl 6 hash that has been hardened to function correctly in a multi-threaded program (which is slower due to necessary locking). The hash will not persist after the program exits.
 
-  * `%hash`
+### %hash
 
 Allows you to specify that a particular hash that you supply will be used as the cache. Any object that does the `Associative` role is acceptable.
 
@@ -221,8 +224,8 @@ Another reason to use `HASH` is to provide your own hash variable. You can then 
 OTHER FACILITIES
 ================
 
-`unmemoize`
------------
+unmemoize
+---------
 
 There's an `unmemoize` function that you can import if you want to. Why would you want to? Here's an example: Suppose you have your cache tied to a DBM file, and you want to make sure that the cache is written out to disk if someone interrupts the program. If the program exits normally, this will happen anyway, but if someone types control-C or something then the program will terminate immediately without synchronizing the database. So what you can do instead is
 
@@ -232,8 +235,8 @@ There's an `unmemoize` function that you can import if you want to. Why would yo
 
 If you ask it to unmemoize a function that was never memoized, it will throw an exception.
 
-`flush_cache`
--------------
+flush_cache
+-----------
 
 `flush_cache(function)` will flush out the caches, discarding *all* the cached data. The argument may be a function name or a reference to a function. For finer control over when data is discarded or expired, see the documentation for `Memoize::Expire`, included in this package.
 
@@ -246,7 +249,8 @@ CAVEATS
 
 Memoization is not a cure-all:
 
-  * *
+depending on program state
+--------------------------
 
 Do not memoize a function whose behavior depends on program state other than its own arguments, such as global variables, the time of day, or file input. These functions will not produce correct results when memoized. For a particularly easy example:
 
@@ -256,7 +260,8 @@ Do not memoize a function whose behavior depends on program state other than its
 
 This function takes no arguments, and as far as `Memoize` is concerned, it always returns the same result. `Memoize` is wrong, of course, and the memoized version of this function will call `time` once to get the current time, and it will return that same time every time you call it after that.
 
-  * *
+side effects
+------------
 
 Do not memoize a function with side effects.
 
@@ -269,7 +274,8 @@ Do not memoize a function with side effects.
 
 This function accepts two arguments, adds them, and prints their sum. Its return value is the number of characters it printed, but you probably didn't care about that. But `Memoize` doesn't understand that. If you memoize this function, you will get the result you expect the first time you ask it to print the sum of 2 and 3, but subsequent calls will return 1 (the return value of `print`) without actually printing anything.
 
-  * *
+modified by caller
+------------------
 
 Do not memoize a function that returns a data structure that is modified by its caller.
 
@@ -299,7 +305,8 @@ Similarly, this:
 
 will modify $u2 as well as $u1, because both variables are references to the same array. Had `getusers` not been memoized, $u1 and $u2 would have referred to different arrays.
 
-  * *
+simple function
+---------------
 
 Do not memoize a very simple function.
 
