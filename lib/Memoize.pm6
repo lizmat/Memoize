@@ -1,6 +1,6 @@
 use v6.c;
 
-module Memoize:ver<0.0.4>:auth<cpan:ELIZABETH> {
+module Memoize:ver<0.0.5>:auth<cpan:ELIZABETH> {
 
     # Role to be mixed in with given Callables.  Keeps the unwrap handle
     # available for unmemoizing.
@@ -133,7 +133,7 @@ sub EXPORT(*@args) {
 
 =head1 NAME
 
-Memoize - Port of Perl 5's Memoize 1.03
+Memoize - Port of Perl's Memoize 1.03
 
 =head1 SYNOPSIS
 
@@ -155,7 +155,7 @@ Options include:
 =head1 PORTING CAVEATS
 
 Because pads / stashes are immutable at runtime and the way code can be
-wrapped in Perl 6, it is B<not> possible to install a memoized version of
+wrapped in Raku, it is B<not> possible to install a memoized version of
 a function B<and> not wrap the original code.  Therefore it seemed more
 sensible to remove the INSTALL feature altogether, at least at this point
 in time.
@@ -164,9 +164,9 @@ The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a
 thread-safe in memory storage, which is slower because of the required
 locking.
 
-Since Perl 6 does not have the concept of C<scalar> versus C<list> context,
+Since Raku does not have the concept of C<scalar> versus C<list> context,
 only one type of cache is used internally, as opposed to two different ones
-as in Perl 5.  Many functions / modules of the CPAN Butterfly Plan accept a
+as in Perl.  Many functions / modules of the CPAN Butterfly Plan accept a
 C<Scalar> as the first positional parameter to indicate the scalar context
 version of the called function is requested.  Since this is a parameter like
 any other, it will be used to distinguish scalar vs list meaning by the
@@ -178,7 +178,7 @@ recognized, that only accepts either C<'MEMORY'>, C<'MULTI'> or an object
 that does the C<Associative> role as a parameter (as there is no need for
 the C<'FAULT'> and C<'MERGE'> values anymore).
 
-Since Perl 6 has proper typing, it can recognize that an object that does
+Since Raku has proper typing, it can recognize that an object that does
 the C<Associative> role is being passed as the parameter with C<:CACHE>, so
 there is no need to specify the word 'HASH' anymore.
 
@@ -404,13 +404,13 @@ C<MULTI> or an object that performs the C<Associative> role.
 =head3 MEMORY
 
 C<MEMORY> means that return values from the function will be cached in
-an ordinary Perl 6 hash.  The hash will not persist after the program exits.
+an ordinary Raku hash.  The hash will not persist after the program exits.
 This is the default.
 
 =head3 MULTI
 
 C<MULTI> means that return values from the function will be cached in
-a Perl 6 hash that has been hardened to function correctly in a multi-threaded
+a Raku hash that has been hardened to function correctly in a multi-threaded
 program (which is slower due to necessary locking).  The hash will not
 persist after the program exits.
 
@@ -430,7 +430,7 @@ A typical example is:
     memoize 'function', CACHE => %cache;
 
 Or if you want to use the "name of named parameter is the same as the
-variable" feature of Perl 6:
+variable" feature of Raku:
 
     my %CACHE is MyStore[$filename];
     memoize 'function', :%CACHE;
@@ -598,7 +598,7 @@ Pull Requests are welcome.
 
 Copyright 2018-2019 Elizabeth Mattijsen
 
-Re-imagined from Perl 5 as part of the CPAN Butterfly Plan.
+Re-imagined from Perl as part of the CPAN Butterfly Plan.
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

@@ -1,9 +1,7 @@
-[![Build Status](https://travis-ci.org/lizmat/Memoize.svg?branch=master)](https://travis-ci.org/lizmat/Memoize)
-
 NAME
 ====
 
-Memoize - Port of Perl 5's Memoize 1.03
+Memoize - Port of Perl's Memoize 1.03
 
 SYNOPSIS
 ========
@@ -26,15 +24,15 @@ Options include:
 PORTING CAVEATS
 ===============
 
-Because pads / stashes are immutable at runtime and the way code can be wrapped in Perl 6, it is **not** possible to install a memoized version of a function **and** not wrap the original code. Therefore it seemed more sensible to remove the INSTALL feature altogether, at least at this point in time.
+Because pads / stashes are immutable at runtime and the way code can be wrapped in Raku, it is **not** possible to install a memoized version of a function **and** not wrap the original code. Therefore it seemed more sensible to remove the INSTALL feature altogether, at least at this point in time.
 
 The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a thread-safe in memory storage, which is slower because of the required locking.
 
-Since Perl 6 does not have the concept of `scalar` versus `list` context, only one type of cache is used internally, as opposed to two different ones as in Perl 5. Many functions / modules of the CPAN Butterfly Plan accept a `Scalar` as the first positional parameter to indicate the scalar context version of the called function is requested. Since this is a parameter like any other, it will be used to distinguish scalar vs list meaning by the default normalizer.
+Since Raku does not have the concept of `scalar` versus `list` context, only one type of cache is used internally, as opposed to two different ones as in Perl. Many functions / modules of the CPAN Butterfly Plan accept a `Scalar` as the first positional parameter to indicate the scalar context version of the called function is requested. Since this is a parameter like any other, it will be used to distinguish scalar vs list meaning by the default normalizer.
 
 Therefore there are no separate `:SCALAR_CACHE` and `:LIST_CACHE` named parameters necessary anymore: instead a single `:CACHE` parameter is recognized, that only accepts either `'MEMORY'`, `'MULTI'` or an object that does the `Associative` role as a parameter (as there is no need for the `'FAULT'` and `'MERGE'` values anymore).
 
-Since Perl 6 has proper typing, it can recognize that an object that does the `Associative` role is being passed as the parameter with `:CACHE`, so there is no need to specify the word 'HASH' anymore.
+Since Raku has proper typing, it can recognize that an object that does the `Associative` role is being passed as the parameter with `:CACHE`, so there is no need to specify the word 'HASH' anymore.
 
 The default in-memory backend for memoized values is **not** thread-safe. If you want multiple threads to work with the same memoized function, you will need to specify a CACHE parameter with a backend that **is** threadsafe.
 
@@ -195,11 +193,11 @@ The argument to `CACHE` must either the string `MEMORY`, the string `MULTI` or a
 
 ### MEMORY
 
-`MEMORY` means that return values from the function will be cached in an ordinary Perl 6 hash. The hash will not persist after the program exits. This is the default.
+`MEMORY` means that return values from the function will be cached in an ordinary Raku hash. The hash will not persist after the program exits. This is the default.
 
 ### MULTI
 
-`MULTI` means that return values from the function will be cached in a Perl 6 hash that has been hardened to function correctly in a multi-threaded program (which is slower due to necessary locking). The hash will not persist after the program exits.
+`MULTI` means that return values from the function will be cached in a Raku hash that has been hardened to function correctly in a multi-threaded program (which is slower due to necessary locking). The hash will not persist after the program exits.
 
 ### %hash
 
@@ -212,7 +210,7 @@ A typical example is:
     my %cache is MyStore[$filename];
     memoize 'function', CACHE => %cache;
 
-Or if you want to use the "name of named parameter is the same as the variable" feature of Perl 6:
+Or if you want to use the "name of named parameter is the same as the variable" feature of Raku:
 
     my %CACHE is MyStore[$filename];
     memoize 'function', :%CACHE;
@@ -332,7 +330,7 @@ COPYRIGHT AND LICENSE
 
 Copyright 2018-2019 Elizabeth Mattijsen
 
-Re-imagined from Perl 5 as part of the CPAN Butterfly Plan.
+Re-imagined from Perl as part of the CPAN Butterfly Plan.
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

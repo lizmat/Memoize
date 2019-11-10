@@ -2,6 +2,9 @@ Revision history for Memoize
 
 {{$NEXT}}
 
+0.0.5  2019-11-10T13:37:42+01:00
+    - changed Perl 6 to Raku, Perl 5 to Perl
+
 0.0.4  2019-03-17T22:59:52+01:00
     - Update PORTING CAVEATS wrt use of Scalar to indicate scalar context
     - Update copyright year

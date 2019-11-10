@@ -5,7 +5,7 @@
   ],
   "build-depends" : [ ],
   "depends" : [ ],
-  "description" : "Port of Perl 5's Memoize 1.03",
+  "description" : "Port of Perl's Memoize 1.03",
   "license" : "Artistic-2.0",
   "name" : "Memoize",
   "perl" : "6.c",
@@ -19,5 +19,5 @@
     "CPAN5"
   ],
   "test-depends" : [ ],
-  "version" : "0.0.4"
+  "version" : "0.0.5"
 }
