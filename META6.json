@@ -1,23 +1,27 @@
 {
-  "auth" : "cpan:ELIZABETH",
-  "authors" : [
+  "auth": "cpan:ELIZABETH",
+  "authors": [
     "Elizabeth Mattijsen"
   ],
-  "build-depends" : [ ],
-  "depends" : [ ],
-  "description" : "Port of Perl's Memoize 1.03",
-  "license" : "Artistic-2.0",
-  "name" : "Memoize",
-  "perl" : "6.c",
-  "provides" : {
-    "Memoize" : "lib/Memoize.pm6"
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "Raku port of Perl's Memoize module 1.03",
+  "license": "Artistic-2.0",
+  "name": "Memoize",
+  "perl": "6.c",
+  "provides": {
+    "Memoize": "lib/Memoize.pm6"
   },
-  "resources" : [ ],
-  "source-url" : "https://github.com/lizmat/Memoize.git",
-  "tags" : [
+  "resources": [
+  ],
+  "source-url": "https://github.com/lizmat/Memoize.git",
+  "tags": [
     "UTILS",
     "CPAN5"
   ],
-  "test-depends" : [ ],
-  "version" : "0.0.5"
+  "test-depends": [
+  ],
+  "version": "0.0.6"
 }

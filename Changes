@@ -2,6 +2,11 @@ Revision history for Memoize
 
 {{$NEXT}}
 
+0.0.6  2020-11-12T19:38:14+01:00
+    - Change name of distribution
+    - Force to highest possible Raku version
+    - Update copyright year
+
 0.0.5  2019-11-10T13:37:42+01:00
     - changed Perl 6 to Raku, Perl 5 to Perl
 

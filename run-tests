@@ -3,9 +3,10 @@ say run(<raku --version>, :out).out.slurp;
 say "Testing {"dist.ini".IO.lines.head.substr(7)}";
 
 my $failed = 0;
+my $done   = 0;
 for "t".IO.dir(:test(*.ends-with: '.t' | '.rakutest')).map(*.Str).sort {
     say "=== $_";
-    my $proc = run "raku", "-Ilib", $_, :out, :merge;
+    my $proc = run "raku", "--ll-exception", "-Ilib", $_, :out, :merge;
     if $proc {
         $proc.out.slurp;
     }
@@ -13,7 +14,10 @@ for "t".IO.dir(:test(*.ends-with: '.t' | '.rakutest')).map(*.Str).sort {
         $failed++;
         say $proc.out.slurp || "No output received, exit-code $proc.exitcode()";
     }
+    $done++;
 }
 
-say $failed ?? "\nFAILED: $failed" !! "\nALL OK";
+say $failed ?? "FAILED: $failed of $done" !! "\nALL {$done if $done > 1} OK";
 exit $failed
+
+# vim: expandtab shiftwidth=4

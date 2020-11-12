@@ -1,6 +1,6 @@
-use v6.c;
+use v6.*;
 
-module Memoize:ver<0.0.5>:auth<cpan:ELIZABETH> {
+module Memoize:ver<0.0.6>:auth<cpan:ELIZABETH> {
 
     # Role to be mixed in with given Callables.  Keeps the unwrap handle
     # available for unmemoizing.
@@ -133,7 +133,7 @@ sub EXPORT(*@args) {
 
 =head1 NAME
 
-Memoize - Port of Perl's Memoize 1.03
+Raku port of Perl's Memoize module 1.03
 
 =head1 SYNOPSIS
 
@@ -152,41 +152,10 @@ Options include:
     :CACHE<MULTI>           # in memory, multi-threaded, slower
     :CACHE(%cache_hash)     # any Associative object
 
-=head1 PORTING CAVEATS
-
-Because pads / stashes are immutable at runtime and the way code can be
-wrapped in Raku, it is B<not> possible to install a memoized version of
-a function B<and> not wrap the original code.  Therefore it seemed more
-sensible to remove the INSTALL feature altogether, at least at this point
-in time.
-
-The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a
-thread-safe in memory storage, which is slower because of the required
-locking.
-
-Since Raku does not have the concept of C<scalar> versus C<list> context,
-only one type of cache is used internally, as opposed to two different ones
-as in Perl.  Many functions / modules of the CPAN Butterfly Plan accept a
-C<Scalar> as the first positional parameter to indicate the scalar context
-version of the called function is requested.  Since this is a parameter like
-any other, it will be used to distinguish scalar vs list meaning by the
-default normalizer.
-
-Therefore there are no separate C<:SCALAR_CACHE> and C<:LIST_CACHE> named
-parameters necessary anymore: instead a single C<:CACHE> parameter is
-recognized, that only accepts either C<'MEMORY'>, C<'MULTI'> or an object
-that does the C<Associative> role as a parameter (as there is no need for
-the C<'FAULT'> and C<'MERGE'> values anymore).
-
-Since Raku has proper typing, it can recognize that an object that does
-the C<Associative> role is being passed as the parameter with C<:CACHE>, so
-there is no need to specify the word 'HASH' anymore.
-
-The default in-memory backend for memoized values is B<not> thread-safe.
-If you want multiple threads to work with the same memoized function, you
-will need to specify a CACHE parameter with a backend that B<is> threadsafe.
-
 =head1 DESCRIPTION
+
+This module tries to mimic the behaviour of Perl's C<Memoize> module
+as closely as possible in the Raku Programming Language.
 
 C<Memoizing> a function makes it faster by trading space for time.  It
 does this by caching the return values of the function in a table.
@@ -264,6 +233,40 @@ this:
 Since there are relatively few objects in a picture, there are only a
 few colors, which get looked up over and over again.  Memoizing
 C<ColorToRGB> sped up the program by several percent.
+
+=head1 PORTING CAVEATS
+
+Because pads / stashes are immutable at runtime and the way code can be
+wrapped in Raku, it is B<not> possible to install a memoized version of
+a function B<and> not wrap the original code.  Therefore it seemed more
+sensible to remove the INSTALL feature altogether, at least at this point
+in time.
+
+The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a
+thread-safe in memory storage, which is slower because of the required
+locking.
+
+Since Raku does not have the concept of C<scalar> versus C<list> context,
+only one type of cache is used internally, as opposed to two different ones
+as in Perl.  Many functions / modules of the CPAN Butterfly Plan accept a
+C<Scalar> as the first positional parameter to indicate the scalar context
+version of the called function is requested.  Since this is a parameter like
+any other, it will be used to distinguish scalar vs list meaning by the
+default normalizer.
+
+Therefore there are no separate C<:SCALAR_CACHE> and C<:LIST_CACHE> named
+parameters necessary anymore: instead a single C<:CACHE> parameter is
+recognized, that only accepts either C<'MEMORY'>, C<'MULTI'> or an object
+that does the C<Associative> role as a parameter (as there is no need for
+the C<'FAULT'> and C<'MERGE'> values anymore).
+
+Since Raku has proper typing, it can recognize that an object that does
+the C<Associative> role is being passed as the parameter with C<:CACHE>, so
+there is no need to specify the word 'HASH' anymore.
+
+The default in-memory backend for memoized values is B<not> thread-safe.
+If you want multiple threads to work with the same memoized function, you
+will need to specify a CACHE parameter with a backend that B<is> threadsafe.
 
 =head1 DETAILS
 
@@ -596,7 +599,7 @@ Pull Requests are welcome.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2018-2019 Elizabeth Mattijsen
+Copyright 2018-2020 Elizabeth Mattijsen
 
 Re-imagined from Perl as part of the CPAN Butterfly Plan.
 
@@ -604,4 +607,4 @@ This library is free software; you can redistribute it and/or modify it under th
 
 =end pod
 
-# vim: ft=perl6 expandtab sw=4
+# vim: expandtab shiftwidth=4

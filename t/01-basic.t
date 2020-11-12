@@ -1,4 +1,4 @@
-use v6.c;
+use v6.*;
 use Test;
 
 plan 9;
@@ -20,4 +20,4 @@ plan 9;
     ok defined(::('&flush_cache')), '&flush_cache *not* imported?';
 }
 
-# vim: ft=perl6 expandtab sw=4
+# vim: expandtab shiftwidth=4

@@ -1,7 +1,7 @@
 NAME
 ====
 
-Memoize - Port of Perl's Memoize 1.03
+Raku port of Perl's Memoize module 1.03
 
 SYNOPSIS
 ========
@@ -21,23 +21,10 @@ Options include:
     :CACHE<MULTI>           # in memory, multi-threaded, slower
     :CACHE(%cache_hash)     # any Associative object
 
-PORTING CAVEATS
-===============
-
-Because pads / stashes are immutable at runtime and the way code can be wrapped in Raku, it is **not** possible to install a memoized version of a function **and** not wrap the original code. Therefore it seemed more sensible to remove the INSTALL feature altogether, at least at this point in time.
-
-The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a thread-safe in memory storage, which is slower because of the required locking.
-
-Since Raku does not have the concept of `scalar` versus `list` context, only one type of cache is used internally, as opposed to two different ones as in Perl. Many functions / modules of the CPAN Butterfly Plan accept a `Scalar` as the first positional parameter to indicate the scalar context version of the called function is requested. Since this is a parameter like any other, it will be used to distinguish scalar vs list meaning by the default normalizer.
-
-Therefore there are no separate `:SCALAR_CACHE` and `:LIST_CACHE` named parameters necessary anymore: instead a single `:CACHE` parameter is recognized, that only accepts either `'MEMORY'`, `'MULTI'` or an object that does the `Associative` role as a parameter (as there is no need for the `'FAULT'` and `'MERGE'` values anymore).
-
-Since Raku has proper typing, it can recognize that an object that does the `Associative` role is being passed as the parameter with `:CACHE`, so there is no need to specify the word 'HASH' anymore.
-
-The default in-memory backend for memoized values is **not** thread-safe. If you want multiple threads to work with the same memoized function, you will need to specify a CACHE parameter with a backend that **is** threadsafe.
-
 DESCRIPTION
 ===========
+
+This module tries to mimic the behaviour of Perl's `Memoize` module as closely as possible in the Raku Programming Language.
 
 `Memoizing` a function makes it faster by trading space for time. It does this by caching the return values of the function in a table. If you call the function again with the same arguments, `memoize` jumps in and gives you the value out of the table, instead of letting the function compute the value all over again.
 
@@ -85,6 +72,21 @@ Here's an even simpler example: I wrote a simple ray tracer; the program would l
     }
 
 Since there are relatively few objects in a picture, there are only a few colors, which get looked up over and over again. Memoizing `ColorToRGB` sped up the program by several percent.
+
+PORTING CAVEATS
+===============
+
+Because pads / stashes are immutable at runtime and the way code can be wrapped in Raku, it is **not** possible to install a memoized version of a function **and** not wrap the original code. Therefore it seemed more sensible to remove the INSTALL feature altogether, at least at this point in time.
+
+The CACHE\<MULTI> is a special version of CACHE\<MEMORY> that installs a thread-safe in memory storage, which is slower because of the required locking.
+
+Since Raku does not have the concept of `scalar` versus `list` context, only one type of cache is used internally, as opposed to two different ones as in Perl. Many functions / modules of the CPAN Butterfly Plan accept a `Scalar` as the first positional parameter to indicate the scalar context version of the called function is requested. Since this is a parameter like any other, it will be used to distinguish scalar vs list meaning by the default normalizer.
+
+Therefore there are no separate `:SCALAR_CACHE` and `:LIST_CACHE` named parameters necessary anymore: instead a single `:CACHE` parameter is recognized, that only accepts either `'MEMORY'`, `'MULTI'` or an object that does the `Associative` role as a parameter (as there is no need for the `'FAULT'` and `'MERGE'` values anymore).
+
+Since Raku has proper typing, it can recognize that an object that does the `Associative` role is being passed as the parameter with `:CACHE`, so there is no need to specify the word 'HASH' anymore.
+
+The default in-memory backend for memoized values is **not** thread-safe. If you want multiple threads to work with the same memoized function, you will need to specify a CACHE parameter with a backend that **is** threadsafe.
 
 DETAILS
 =======
@@ -328,7 +330,7 @@ Source can be located at: https://github.com/lizmat/Memoize . Comments and Pull 
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2018-2019 Elizabeth Mattijsen
+Copyright 2018-2020 Elizabeth Mattijsen
 
 Re-imagined from Perl as part of the CPAN Butterfly Plan.
 
