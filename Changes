@@ -2,6 +2,9 @@ Revision history for Memoize
 
 {{$NEXT}}
 
+0.0.7  2020-11-16T18:12:10+01:00
+    - Force to 6.d to avoid breakage on < 6.e
+
 0.0.6  2020-11-12T19:38:14+01:00
     - Change name of distribution
     - Force to highest possible Raku version

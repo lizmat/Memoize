@@ -1,6 +1,6 @@
-use v6.*;
+use v6.d;
 
-module Memoize:ver<0.0.6>:auth<cpan:ELIZABETH> {
+module Memoize:ver<0.0.7>:auth<cpan:ELIZABETH> {
 
     # Role to be mixed in with given Callables.  Keeps the unwrap handle
     # available for unmemoizing.

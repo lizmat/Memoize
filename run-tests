@@ -17,7 +17,7 @@ for "t".IO.dir(:test(*.ends-with: '.t' | '.rakutest')).map(*.Str).sort {
     $done++;
 }
 
-say $failed ?? "FAILED: $failed of $done" !! "\nALL {$done if $done > 1} OK";
-exit $failed
+say $failed ?? "FAILED: $failed of $done" !! "\nALL {"$done " if $done > 1}OK";
+exit $failed;
 
 # vim: expandtab shiftwidth=4
