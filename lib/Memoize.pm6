@@ -1,36 +1,36 @@
 use v6.d;
 
-module Memoize:ver<0.0.7>:auth<cpan:ELIZABETH> {
-
-    # Role to be mixed in with given Callables.  Keeps the unwrap handle
-    # available for unmemoizing.
-    role Memoized {
-        has &.original;
-        has %.cache;
-        has $.unwrap-handle;
-        method memoize-with(\original, \cache, \unwrap-handle) {
-            &!original      := original;
-            %!cache         := cache;
-            $!unwrap-handle := unwrap-handle;
-            self
-        }
+# Role to be mixed in with given Callables.  Keeps the unwrap handle
+# available for unmemoizing.
+my role Memoized {
+    has &.original;
+    has %.cache;
+    has $.unwrap-handle;
+    method memoize-with(\original, \cache, \unwrap-handle) {
+        &!original      := original;
+        %!cache         := cache;
+        $!unwrap-handle := unwrap-handle;
+        self
     }
+}
 
-    # Role to mix into a Hash to make it thread-safe for Memoize
-    role Multi {
-        has $!lock = Lock.new;
-        method AT-KEY(\key)   {
-            self.EXISTS-KEY(key)
-              ?? self.Hash::AT-KEY(key)
-              !! $!lock.protect: { self.Hash::AT-KEY(key) }
-        }
-        method BIND-KEY(\key,\value) {
-            $!lock.protect: { self.Hash::BIND-KEY(key, value) }
-        }
-        method STORE(|c) {
-            $!lock.protect: { self.Hash::STORE(|c) }
-        }
+# Role to mix into a Hash to make it thread-safe for Memoize
+my role Multi {
+    has $!lock = Lock.new;
+    method AT-KEY(\key)   {
+        self.EXISTS-KEY(key)
+          ?? self.Hash::AT-KEY(key)
+          !! $!lock.protect: { self.Hash::AT-KEY(key) }
     }
+    method BIND-KEY(\key,\value) {
+        $!lock.protect: { self.Hash::BIND-KEY(key, value) }
+    }
+    method STORE(|c) {
+        $!lock.protect: { self.Hash::STORE(|c) }
+    }
+}
+
+module Memoize:ver<0.0.8>:auth<cpan:ELIZABETH> {
 
     # The default normalizer
     my constant joiner = chr(28);

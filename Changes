@@ -2,6 +2,9 @@ Revision history for Memoize
 
 {{$NEXT}}
 
+0.0.8  2020-11-19T12:20:57+01:00
+    - Move roles outside of module, for better naming: Sub+{Memoize}
+
 0.0.7  2020-11-16T18:12:10+01:00
     - Force to 6.d to avoid breakage on < 6.e
 
