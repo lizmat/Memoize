@@ -1,4 +1,3 @@
-use v6.*;
 use Test;
 
 use Memoize <memoize unmemoize flush_cache>;

@@ -2,6 +2,12 @@ Revision history for Memoize
 
 {{$NEXT}}
 
+0.0.9  2021-09-09T19:51:47+02:00
+    - Change file extension to .rakumod
+    - Migrate to zef ecosystem
+    - Update email address
+    - Update copyright year
+
 0.0.8  2020-11-19T12:20:57+01:00
     - Move roles outside of module, for better naming: Sub+{Memoize}
 

@@ -1,5 +1,5 @@
 {
-  "auth": "cpan:ELIZABETH",
+  "auth": "zef:lizmat",
   "authors": [
     "Elizabeth Mattijsen"
   ],
@@ -12,7 +12,7 @@
   "name": "Memoize",
   "perl": "6.c",
   "provides": {
-    "Memoize": "lib/Memoize.pm6"
+    "Memoize": "lib/Memoize.rakumod"
   },
   "resources": [
   ],
@@ -23,5 +23,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.8"
+  "version": "0.0.9"
 }
