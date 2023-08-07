@@ -10,7 +10,7 @@
   "description": "Raku port of Perl's Memoize module 1.03",
   "license": "Artistic-2.0",
   "name": "Memoize",
-  "perl": "6.c",
+  "perl": "6.*",
   "provides": {
     "Memoize": "lib/Memoize.rakumod"
   },
@@ -23,5 +23,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.9"
+  "version": "0.0.10"
 }

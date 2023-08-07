@@ -17,10 +17,8 @@ my role Memoized {
 # Role to mix into a Hash to make it thread-safe for Memoize
 my role Multi {
     has $!lock = Lock.new;
-    method AT-KEY(\key)   {
-        self.EXISTS-KEY(key)
-          ?? self.Hash::AT-KEY(key)
-          !! $!lock.protect: { self.Hash::AT-KEY(key) }
+    method AT-KEY(\key) {
+        $!lock.protect: { self.Hash::AT-KEY(key) }
     }
     method BIND-KEY(\key,\value) {
         $!lock.protect: { self.Hash::BIND-KEY(key, value) }
@@ -30,7 +28,7 @@ my role Multi {
     }
 }
 
-module Memoize:ver<0.0.9>:auth<zef:lizmat> {
+module Memoize {
 
     # The default normalizer
     my constant joiner = chr(28);
@@ -56,7 +54,7 @@ module Memoize:ver<0.0.9>:auth<zef:lizmat> {
 
     # The string case: convert string to Callable and pass on
     multi sub memoize(Str() $name, |c) {
-        memoize( name-to-code(CALLERS::, $name), |c )
+        memoize( name-to-code(CALLER::LEXICAL::, $name), |c )
     }
 
     # The Callable frontend cases
@@ -95,7 +93,7 @@ module Memoize:ver<0.0.9>:auth<zef:lizmat> {
 
     our proto sub unmemoize(|) is export(:ALL) {*}
     multi sub unmemoize(Str() $name) {
-        unmemoize(CALLERS::{ '&' ~ $name })
+        unmemoize(CALLER::LEXICAL::{ '&' ~ $name })
     }
     multi sub unmemoize(Memoized:D $code) {
         $code.cache.?FLUSH;
@@ -105,7 +103,7 @@ module Memoize:ver<0.0.9>:auth<zef:lizmat> {
 
     our proto sub flush_cache(|) is export(:ALL) {*}
     multi sub flush_cache(Str() $name --> Nil) {
-        flush_cache(name-to-code(CALLERS::, $name))
+        flush_cache(name-to-code(CALLER::LEXICAL::, $name))
     }
     multi sub flush_cache(Memoized:D $code --> Nil) {
         # For some reason, Map.STORE doesn't have a multi for .STORE()
@@ -594,12 +592,16 @@ Memoization is not magical.
 
 Elizabeth Mattijsen <liz@raku.rocks>
 
+If you like this module, or what I’m doing more generally, committing to a
+L<small sponsorship|https://github.com/sponsors/lizmat/>  would mean a great
+deal to me!
+
 Source can be located at: https://github.com/lizmat/Memoize . Comments and
 Pull Requests are welcome.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2018, 2019, 2020, 2021 Elizabeth Mattijsen
+Copyright 2018, 2019, 2020, 2021, 2023 Elizabeth Mattijsen
 
 Re-imagined from Perl as part of the CPAN Butterfly Plan.
 
