@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/lizmat/Memoize/workflows/test/badge.svg)](https://github.com/lizmat/Memoize/actions)
+[![Actions Status](https://github.com/lizmat/Memoize/actions/workflows/linux.yml/badge.svg)](https://github.com/lizmat/Memoize/actions) [![Actions Status](https://github.com/lizmat/Memoize/actions/workflows/macos.yml/badge.svg)](https://github.com/lizmat/Memoize/actions) [![Actions Status](https://github.com/lizmat/Memoize/actions/workflows/windows.yml/badge.svg)](https://github.com/lizmat/Memoize/actions)
 
 NAME
 ====
@@ -8,20 +8,26 @@ Raku port of Perl's Memoize module 1.03
 SYNOPSIS
 ========
 
-    use Memoize;
-    memoize(&slow_function);
-    slow_function(arguments);    # Is faster than it was before
+```raku
+use Memoize;
+memoize(&slow_function);
+slow_function(arguments);    # Is faster than it was before
+```
 
 This is normally all you need to know. However, many options are available:
 
-    memoize(&function, options...);
+```raku
+memoize(&function, options...);
+```
 
 Options include:
 
-    :NORMALIZER(&function)  # default: join with \x[1C] (aka chr(28)
-    :CACHE<MEMORY>          # in memory, single threaded, default
-    :CACHE<MULTI>           # in memory, multi-threaded, slower
-    :CACHE(%cache_hash)     # any Associative object
+```raku
+:NORMALIZER(&function)  # default: join with \x[1C] (aka chr(28)
+:CACHE<MEMORY>          # in memory, single threaded, default
+:CACHE<MULTI>           # in memory, multi-threaded, slower
+:CACHE(%cache_hash)     # any Associative object
+```
 
 DESCRIPTION
 ===========
@@ -32,11 +38,13 @@ This module tries to mimic the behaviour of Perl's `Memoize` module as closely a
 
 Here is an extreme example. Consider the Fibonacci sequence, defined by the following function:
 
-    # Compute Fibonacci numbers
-    sub fib($n) {
-        return $n if $n < 2;
-        fib($n-1) + fib($n-2);
-    }
+```raku
+# Compute Fibonacci numbers
+sub fib($n) {
+    return $n if $n < 2;
+    fib($n-1) + fib($n-2);
+}
+```
 
 This function is very slow. Why? To compute fib(14), it first wants to compute fib(13) and fib(12), and add the results. But to compute fib(13), it first has to compute fib(12) and fib(11), and then it comes back and computes fib(12) all over again even though the answer is the same. And both of the times that it wants to compute fib(12), it has to compute fib(11) from scratch, and then it has to do it again each time it wants to compute fib(13). This function does so much recomputing of old results that it takes a really long time to run---fib(14) makes 1,200 extra recursive calls to itself, to compute and recompute things that it already computed.
 
@@ -44,34 +52,40 @@ This function is a good candidate for memoization. If you memoize the 'fib' func
 
 You could do the memoization yourself, by rewriting the function, like this:
 
-    # Compute Fibonacci numbers, memoized version
-    {
-        my @fib;
-        sub fib($n) {
-            return $_ with @fib[$n];
-            return @fib[$n] = $n if $n < 2;
+```raku
+# Compute Fibonacci numbers, memoized version
+{
+    my @fib;
+    sub fib($n) {
+        return $_ with @fib[$n];
+        return @fib[$n] = $n if $n < 2;
 
-            @fib[$n] = fib($n-1) + fib($n-2);
-        }
+        @fib[$n] = fib($n-1) + fib($n-2);
     }
+}
+```
 
 Or you could use this module, like this:
 
-    use Memoize;
-    memoize('fib');
+```raku
+use Memoize;
+memoize(&fib);
 
-    # Rest of the fib function just like the original version.
+# Rest of the fib function just like the original version.
+```
 
 This makes it easy to turn memoizing on and off.
 
 Here's an even simpler example: I wrote a simple ray tracer; the program would look in a certain direction, figure out what it was looking at, and then convert the `color` value (typically a string like `red`) of that object to a red, green, and blue pixel value, like this:
 
-    for ^300 -> $direction {
-        # Figure out which object is in direction $direction
-        $color = $object{color};
-        ($r, $g, $b) = ColorToRGB($color);
-        ...
-    }
+```raku
+for ^300 -> $direction {
+    # Figure out which object is in direction $direction
+    $color = $object{color};
+    ($r, $g, $b) = ColorToRGB($color);
+    ...
+}
+```
 
 Since there are relatively few objects in a picture, there are only a few colors, which get looked up over and over again. Memoizing `ColorToRGB` sped up the program by several percent.
 
@@ -97,9 +111,11 @@ This module exports exactly one function, `memoize`. The rest of the functions i
 
 You should say
 
-    memoize(function)
+```raku
+memoize(Callable)
+```
 
-where `function` is the name of the function or the `Routine` object that you want to memoize. `memoize` returns a reference to the new, memoized version of the function, or `Nil` on a non-fatal error. At present, there are no non-fatal errors, but there might be some in the future.
+where `Callable` is the `Callable` object that you want to memoize. `memoize` returns a reference to the new, memoized version of the function, or `Nil` on a non-fatal error. At present, there are no non-fatal errors, but there might be some in the future.
 
 If `function` was the name of a function, then `memoize` hides the old version and installs the new memoized version under the old name, so that `&function(...)` actually invokes the memoized version.
 
@@ -108,10 +124,12 @@ OPTIONS
 
 There are some optional options you can pass to `memoize` to change the way it behaves a little. To supply options, invoke `memoize` like this:
 
-    memoize(function,
-      NORMALIZER => function,
-      CACHE      => option,
-    );
+```raku
+memoize(function,
+  NORMALIZER => function,
+  CACHE      => option,
+);
+```
 
 Each of these options is optional; you can include some, all, or none of them.
 
@@ -120,69 +138,87 @@ NORMALIZER
 
 Suppose your function looks like this:
 
-    # Typical call: f('aha!', A => 11, B => 12);
-    sub f($a, *%hash {
-        %hash{B} ||= 2;  # B defaults to 2
-        %hash{C} ||= 7;  # C defaults to 7
+```raku
+# Typical call: f('aha!', A => 11, B => 12);
+sub f($a, *%hash {
+    %hash{B} ||= 2;  # B defaults to 2
+    %hash{C} ||= 7;  # C defaults to 7
 
-        # Do something with $a, %hash
-    }
+    # Do something with $a, %hash
+}
+```
 
 Now, the following calls to your function are all completely equivalent:
 
-    f(OUCH);
-    f(OUCH, B => 2);
-    f(OUCH, C => 7);
-    f(OUCH, B => 2, C => 7);
-    f(OUCH, C => 7, B => 2);
-    (etc.)
+```raku
+f(OUCH);
+f(OUCH, B => 2);
+f(OUCH, C => 7);
+f(OUCH, B => 2, C => 7);
+f(OUCH, C => 7, B => 2);
+(etc.)
+```
 
 However, unless you tell `Memoize` that these calls are equivalent, it will not know that, and it will compute the values for these invocations of your function separately, and store them separately.
 
 To prevent this, supply a `NORMALIZER` function that turns the program arguments into a string in a way that equivalent arguments turn into the same string. A `NORMALIZER` function for `f` above might look like this:
 
-    sub normalize_f($a,*%hash {
-        %hash{B} ||= 2;
-        $hash{C} ||= 7;
+```raku
+sub normalize_f($a,*%hash {
+    %hash{B} ||= 2;
+    $hash{C} ||= 7;
 
-        join(',', $a, %hash.sort>>.kv);
-    }
+    join(',', $a, %hash.sort>>.kv);
+}
+```
 
 Each of the argument lists above comes out of the `normalize_f` function looking exactly the same, like this:
 
-    OUCH,B,2,C,7
+```raku
+OUCH,B,2,C,7
+```
 
 You would tell `Memoize` to use this normalizer this way:
 
-    memoize('f', NORMALIZER => 'normalize_f');
+```raku
+memoize('f', NORMALIZER => 'normalize_f');
+```
 
 `memoize` knows that if the normalized version of the arguments is the same for two argument lists, then it can safely look up the value that it computed for one argument list and return it as the result of calling the function with the other argument list, even if the argument lists look different.
 
 The default normalizer just concatenates the stringified arguments with character 28 in between. (In ASCII, this is called FS or control-\.) This always works correctly for functions with only one string argument, and also when the arguments never contain character 28. However, it can confuse certain argument lists:
 
-    normalizer("a\034", "b")
-    normalizer("a", "\034b")
-    normalizer("a\034\034b")
+```raku
+normalizer("a\034", "b")
+normalizer("a", "\034b")
+normalizer("a\034\034b")
+```
 
 for example.
 
 Since hash keys are strings, the default normalizer will not distinguish between type objects / Nil and the empty string.
 
-    sub normalize($a, @b) { join ' ', $a, @b }
+```raku
+sub normalize($a, @b) { join ' ', $a, @b }
+```
 
 For the example above, this produces the key "13 1 2 3 4 5 6 7".
 
 Another use for normalizers is when the function depends on data other than those in its arguments. Suppose you have a function which returns a value which depends on the current hour of the day:
 
-    sub on_duty($problem_type) {
-        my $hour = DateTime.now.hour;
-        my $fh = open("$DIR/$problem_type") or die...;
-        $fh.lines.skip(DateTime.now.hour).head;
-    }
+```raku
+sub on_duty($problem_type) {
+    my $hour = DateTime.now.hour;
+    my $fh = open("$DIR/$problem_type") or die...;
+    $fh.lines.skip(DateTime.now.hour).head;
+}
+```
 
 At 10:23, this function generates the 10th line of a data file; at 3:45 PM it generates the 15th line instead. By default, `Memoize` will only see the $problem_type argument. To fix this, include the current hour in the normalizer:
 
-    sub normalize(*@_) { join ' ', DateTime.now.hour, @_ }
+```raku
+sub normalize(*@_) { join ' ', DateTime.now.hour, @_ }
+```
 
 CACHE
 -----
@@ -191,9 +227,11 @@ Normally, `Memoize` caches your function's return values into an ordinary Perl h
 
 The argument to `CACHE` must either the string `MEMORY`, the string `MULTI` or an object that performs the `Associative` role.
 
-    MEMORY
-    MULTI
-    %hash
+```raku
+MEMORY
+MULTI
+%hash
+```
 
 ### MEMORY
 
@@ -211,13 +249,17 @@ Such an `Associative` object can have any semantics at all. It is typically tied
 
 A typical example is:
 
-    my %cache is MyStore[$filename];
-    memoize 'function', CACHE => %cache;
+```raku
+my %cache is MyStore[$filename];
+memoize 'function', CACHE => %cache;
+```
 
 Or if you want to use the "name of named parameter is the same as the variable" feature of Raku:
 
-    my %CACHE is MyStore[$filename];
-    memoize 'function', :%CACHE;
+```raku
+my %CACHE is MyStore[$filename];
+memoize 'function', :%CACHE;
+```
 
 This has the effect of storing the cache in a `MyStore` database whose name is in `$filename`. The cache will persist after the program has exited. Next time the program runs, it will find the cache already populated from the previous run of the program. Or you can forcibly populate the cache by constructing a batch program that runs in the background and populates the cache file. Then when you come to run your real program the memoized function will be fast because all its results have been precomputed.
 
@@ -231,7 +273,9 @@ unmemoize
 
 There's an `unmemoize` function that you can import if you want to. Why would you want to? Here's an example: Suppose you have your cache tied to a DBM file, and you want to make sure that the cache is written out to disk if someone interrupts the program. If the program exits normally, this will happen anyway, but if someone types control-C or something then the program will terminate immediately without synchronizing the database. So what you can do instead is
 
-    signal(SIGINT).tap: { unmemoize &function; exit }
+```raku
+signal(SIGINT).tap: { unmemoize &function; exit }
+```
 
 `unmemoize` accepts the `Callable` object, or the name of a previously memoized function, and undoes whatever it did to provide the memoized version in the first place, including making the name refer to the unmemoized version if appropriate. It returns a reference to the unmemoized version of the function.
 
@@ -256,9 +300,11 @@ depending on program state
 
 Do not memoize a function whose behavior depends on program state other than its own arguments, such as global variables, the time of day, or file input. These functions will not produce correct results when memoized. For a particularly easy example:
 
-    sub f {
-      time;
-    }
+```raku
+sub f {
+  time;
+}
+```
 
 This function takes no arguments, and as far as `Memoize` is concerned, it always returns the same result. `Memoize` is wrong, of course, and the memoized version of this function will call `time` once to get the current time, and it will return that same time every time you call it after that.
 
@@ -267,12 +313,12 @@ side effects
 
 Do not memoize a function with side effects.
 
-    sub f($a,$b) {
-
+```raku
+sub f($a,$b) {
     my $s = $a + $b;
     say "$a + $b = $s.";
-
-    }
+}
+```
 
 This function accepts two arguments, adds them, and prints their sum. Its return value is the number of characters it printed, but you probably didn't care about that. But `Memoize` doesn't understand that. If you memoize this function, you will get the result you expect the first time you ask it to print the sum of 2 and 3, but subsequent calls will return 1 (the return value of `print`) without actually printing anything.
 
@@ -283,27 +329,31 @@ Do not memoize a function that returns a data structure that is modified by its 
 
 Consider these functions: `getusers` returns a list of users somehow, and then `main` throws away the first user on the list and prints the rest:
 
-    sub main {
-        my @userlist = getusers();
-        shift @userlist;
-        for @userlist -> $u {
-            print "User $u\n";
-        }
+```raku
+sub main {
+    my @userlist = getusers();
+    shift @userlist;
+    for @userlist -> $u {
+        print "User $u\n";
     }
+}
 
-    sub getusers {
-        my @users;
-        # Do something to get a list of users;
-        @users
-    }
+sub getusers {
+    my @users;
+    # Do something to get a list of users;
+    @users
+}
+```
 
 If you memoize `getusers` here, it will work right exactly once. The reference to the users list will be stored in the memo table. `main` will discard the first element from the referenced list. The next time you invoke `main`, `Memoize` will not call `getusers`; it will just return the same reference to the same list it got last time. But this time the list has already had its head removed; `main` will erroneously remove another element from it. The list will get shorter and shorter every time you call `main`.
 
 Similarly, this:
 
-    $u1 = getusers();
-    $u2 = getusers();
-    pop @$u1;
+```raku
+$u1 = getusers();
+$u2 = getusers();
+pop @$u1;
+```
 
 will modify $u2 as well as $u1, because both variables are references to the same array. Had `getusers` not been memoized, $u1 and $u2 would have referred to different arrays.
 
@@ -314,9 +364,11 @@ Do not memoize a very simple function.
 
 Recently someone mentioned to me that the Memoize module made his program run slower instead of faster. It turned out that he was memoizing the following function:
 
-    sub square($value) {
-      $value * $value;
-    }
+```raku
+sub square($value) {
+  $value * $value;
+}
+```
 
 I pointed out that `Memoize` uses a hash, and that looking up a number in the hash is necessarily going to take a lot longer than a single multiplication. There really is no way to speed up the `square` function.
 
@@ -327,14 +379,14 @@ AUTHOR
 
 Elizabeth Mattijsen <liz@raku.rocks>
 
-If you like this module, or what I’m doing more generally, committing to a [small sponsorship](https://github.com/sponsors/lizmat/) would mean a great deal to me!
-
 Source can be located at: https://github.com/lizmat/Memoize . Comments and Pull Requests are welcome.
+
+If you like this module, or what I'm doing more generally, committing to a [small sponsorship](https://github.com/sponsors/lizmat/) would mean a great deal to me!
 
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2018, 2019, 2020, 2021, 2023 Elizabeth Mattijsen
+Copyright 2018, 2019, 2020, 2021, 2026 Elizabeth Mattijsen
 
 Re-imagined from Perl as part of the CPAN Butterfly Plan.
 

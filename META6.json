@@ -10,16 +10,22 @@
   "description": "Raku port of Perl's Memoize module 1.03",
   "license": "Artistic-2.0",
   "name": "Memoize",
-  "perl": "6.*",
   "provides": {
     "Memoize": "lib/Memoize.rakumod"
   },
+  "raku": "6.d",
   "resources": [
   ],
   "source-url": "https://github.com/lizmat/Memoize.git",
+  "support": {
+    "bugtracker": "https://github.com/lizmat/Memoize/issues",
+    "email": "liz@raku.rocks",
+    "source": "https://github.com/lizmat/Memoize.git"
+  },
   "tags": [
     "UTILS",
-    "CPAN5"
+    "CPAN5",
+    "CACHING"
   ],
   "test-depends": [
   ],
