@@ -13,7 +13,7 @@
   "provides": {
     "Memoize": "lib/Memoize.rakumod"
   },
-  "raku": "6.d",
+  "raku": "6.c",
   "resources": [
   ],
   "source-url": "https://github.com/lizmat/Memoize.git",
@@ -29,5 +29,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.10"
+  "version": "0.0.11"
 }

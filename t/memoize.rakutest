@@ -2,10 +2,31 @@ use Test;
 
 use Memoize <memoize unmemoize flush_cache>;
 
-plan 16;
+plan 20;
 
 my $size = 100;
 my $times = 10;
+
+# basic, by string
+{
+    my @seen;
+    sub a($a) { ++@seen[$a]; $a };
+
+    my $original = &a.^name;
+    isnt memoize('a').^name, $original,
+      'did the memoization change the sub with default normalizer';
+
+    for ^$times {
+        a($_) for (^$size).pick(*);
+    }
+    is-deeply @seen, [1 xx $size],
+      'was each different value only seen once with default normalizer';
+
+    is unmemoize('a').^name, $original,
+      'did the unmemoization restore the sub with default normalizer';
+
+    lives-ok { flush_cache('a') }, 'can we flush the cache ok';
+}
 
 # basic, by code object
 {

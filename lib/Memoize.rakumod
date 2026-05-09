@@ -1,4 +1,4 @@
-use v6.*;
+use v6.c;
 
 # Role to be mixed in with given Callables.  Keeps the unwrap handle
 # available for unmemoizing.
@@ -57,7 +57,7 @@ module Memoize {
 
     # The string case: convert string to Callable and pass on
     multi sub memoize(Str() $name, |c) {
-        die "Raku does not generically allow subroutine lookup by name: $name";
+        memoize( name-to-code(CALLER::LEXICAL::, $name), |c )
     }
 
     # The Callable frontend cases

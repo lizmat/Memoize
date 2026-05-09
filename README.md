@@ -386,7 +386,7 @@ If you like this module, or what I'm doing more generally, committing to a [smal
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2018, 2019, 2020, 2021, 2026 Elizabeth Mattijsen
+Copyright 2018, 2019, 2020, 2021, 2023, 2026 Elizabeth Mattijsen
 
 Re-imagined from Perl as part of the CPAN Butterfly Plan.
 

@@ -1,12 +1,10 @@
 Revision history for Memoize
 
 {{$NEXT}}
-    - Remove "look up sub by name" functionality: this can not
-      reliably be implemented, only Callables are now allowed
-    - Use modern test file extensions
+
+0.0.11  2026-05-09T11:37:30+02:00
     - Add preliminary coverage testing
     - Add CI badge for each OS
-    - Add sponsor link
     - Modernize META info
     - Update copyright year
 
