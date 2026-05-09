@@ -17,6 +17,9 @@ my role Memoized {
 # Role to mix into a Hash to make it thread-safe for Memoize
 my role Multi {  # UNCOVERABLE
     has $!lock = Lock.new;
+    method EXISTS-KEY(\key) {
+        $!lock.protect: { self.Hash::EXISTS-KEY(key) }
+    }
     method AT-KEY(\key) {
         $!lock.protect: { self.Hash::AT-KEY(key) }
     }
